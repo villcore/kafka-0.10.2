@@ -20,7 +20,7 @@ import org.apache.kafka.common.requests.RequestHeader;
  * metadata that was originally sent.
  */
 public class ClientResponse {
-
+    //test12
     private final RequestHeader requestHeader;
     private final RequestCompletionHandler callback;
     private final String destination;

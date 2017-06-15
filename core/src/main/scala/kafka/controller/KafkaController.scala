@@ -44,7 +44,14 @@ import java.util.concurrent.locks.ReentrantLock
 import kafka.server._
 import kafka.common.TopicAndPartition
 
+/**
+  * KafkaController上下文
+  *
+  * 缓存了kafka集群整个元信息，broker，存活broker，partion的leader等等
+  * @param zkUtils
+  */
 class ControllerContext(val zkUtils: ZkUtils) {
+  /*** */
   var controllerChannelManager: ControllerChannelManager = null
   val controllerLock: ReentrantLock = new ReentrantLock()
   var shuttingDownBrokerIds: mutable.Set[Int] = mutable.Set.empty
@@ -152,25 +159,40 @@ object KafkaController extends Logging {
 
 class KafkaController(val config: KafkaConfig, zkUtils: ZkUtils, val brokerState: BrokerState, time: Time, metrics: Metrics, threadNamePrefix: Option[String] = None) extends Logging with KafkaMetricsGroup {
   this.logIdent = "[Controller " + config.brokerId + "]: "
+
   private var isRunning = true
+
   private val stateChangeLogger = KafkaController.stateChangeLogger
+
   val controllerContext = new ControllerContext(zkUtils)
+
   val partitionStateMachine = new PartitionStateMachine(this)
+
   val replicaStateMachine = new ReplicaStateMachine(this)
+
+  /*** 用于controller选举，本质是争相在zookeeper创建node /controller 目录，内容是对应成功的broker id*/
   private val controllerElector = new ZookeeperLeaderElector(controllerContext, ZkUtils.ControllerPath, onControllerFailover,
     onControllerResignation, config.brokerId, time)
+
   // have a separate scheduler for the controller to be able to start and stop independently of the
   // kafka server
   private val autoRebalanceScheduler = new KafkaScheduler(1)
+
   var deleteTopicManager: TopicDeletionManager = null
+
+  /*** selector **/
   val offlinePartitionSelector = new OfflinePartitionLeaderSelector(controllerContext, config)
   private val reassignedPartitionLeaderSelector = new ReassignedPartitionLeaderSelector(controllerContext)
   private val preferredReplicaPartitionLeaderSelector = new PreferredReplicaPartitionLeaderSelector(controllerContext)
   private val controlledShutdownPartitionLeaderSelector = new ControlledShutdownLeaderSelector(controllerContext)
+
+
   private val brokerRequestBatch = new ControllerBrokerRequestBatch(this)
 
   private val partitionReassignedListener = new PartitionsReassignedListener(this)
+
   private val preferredReplicaElectionListener = new PreferredReplicaElectionListener(this)
+
   private val isrChangeNotificationListener = new IsrChangeNotificationListener(this)
 
   newGauge(

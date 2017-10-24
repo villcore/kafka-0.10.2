@@ -529,6 +529,9 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
     private final long requestTimeoutMs;
     private volatile boolean closed = false;
 
+    /**
+     * 以下两个字段只是用来判断是否有并发问题，而不是用来解决
+     */
     // currentThread holds the threadId of the current thread accessing KafkaConsumer
     // and is used to prevent multi-threaded access
     private final AtomicLong currentThread = new AtomicLong(NO_CURRENT_THREAD);

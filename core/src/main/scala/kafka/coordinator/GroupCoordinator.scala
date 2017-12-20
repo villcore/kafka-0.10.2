@@ -45,6 +45,7 @@ class GroupCoordinator(val brokerId: Int,
                        val heartbeatPurgatory: DelayedOperationPurgatory[DelayedHeartbeat],
                        val joinPurgatory: DelayedOperationPurgatory[DelayedJoin],
                        time: Time) extends Logging {
+
   type JoinCallback = JoinGroupResult => Unit
   type SyncCallback = (Array[Byte], Short) => Unit
 
@@ -773,6 +774,7 @@ object GroupCoordinator {
             time: Time): GroupCoordinator = {
     val heartbeatPurgatory = DelayedOperationPurgatory[DelayedHeartbeat]("Heartbeat", config.brokerId)
     val joinPurgatory = DelayedOperationPurgatory[DelayedJoin]("Rebalance", config.brokerId)
+
     apply(config, zkUtils, replicaManager, heartbeatPurgatory, joinPurgatory, time)
   }
 

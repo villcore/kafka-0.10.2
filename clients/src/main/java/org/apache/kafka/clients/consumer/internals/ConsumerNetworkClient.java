@@ -168,8 +168,9 @@ public class ConsumerNetworkClient implements Closeable {
      * @throws InterruptException if the calling thread is interrupted
      */
     public void poll(RequestFuture<?> future) {
-        while (!future.isDone())
+        while (!future.isDone()) {
             poll(MAX_POLL_TIMEOUT_MS, time.milliseconds(), future);
+        }
     }
 
     /**

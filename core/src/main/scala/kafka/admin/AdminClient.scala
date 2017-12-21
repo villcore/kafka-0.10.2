@@ -208,6 +208,7 @@ object AdminClient {
         CommonClientConfigs.SECURITY_PROTOCOL_DOC)
       .withClientSslSupport()
       .withClientSaslSupport()
+
     config
   }
 

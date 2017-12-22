@@ -392,16 +392,15 @@ public class Fetcher<K, V> implements SubscriptionState.Listener {
         return offsetsByTimes;
     }
 
-    private Map<TopicPartition, OffsetData> retrieveOffsetsByTimes(
-            Map<TopicPartition, Long> timestampsToSearch, long timeout, boolean requireTimestamps) {
-        if (timestampsToSearch.isEmpty())
+    private Map<TopicPartition, OffsetData> retrieveOffsetsByTimes(Map<TopicPartition, Long> timestampsToSearch, long timeout, boolean requireTimestamps) {
+        if (timestampsToSearch.isEmpty()) {
             return Collections.emptyMap();
+        }
 
         long startMs = time.milliseconds();
         long remaining = timeout;
         do {
-            RequestFuture<Map<TopicPartition, OffsetData>> future =
-                    sendListOffsetRequests(requireTimestamps, timestampsToSearch);
+            RequestFuture<Map<TopicPartition, OffsetData>> future = sendListOffsetRequests(requireTimestamps, timestampsToSearch);
             client.poll(future, remaining);
 
             if (!future.isDone())
@@ -441,11 +440,13 @@ public class Fetcher<K, V> implements SubscriptionState.Listener {
                                                            long timestamp,
                                                            long timeout) {
         Map<TopicPartition, Long> timestampsToSearch = new HashMap<>();
-        for (TopicPartition tp : partitions)
+        for (TopicPartition tp : partitions) {
+            //timestamp = -1
             timestampsToSearch.put(tp, timestamp);
+        }
+
         Map<TopicPartition, Long> result = new HashMap<>();
-        for (Map.Entry<TopicPartition, OffsetData> entry :
-                retrieveOffsetsByTimes(timestampsToSearch, timeout, false).entrySet()) {
+        for (Map.Entry<TopicPartition, OffsetData> entry : retrieveOffsetsByTimes(timestampsToSearch, timeout, false).entrySet()) {
             result.put(entry.getKey(), entry.getValue().offset);
         }
         return result;

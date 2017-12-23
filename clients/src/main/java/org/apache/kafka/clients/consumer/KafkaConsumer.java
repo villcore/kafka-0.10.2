@@ -267,7 +267,7 @@ import java.util.regex.Pattern;
  * to get ahead of the consumed position, which results in missing records. The advantage of using manual offset
  * control is that you have direct control over when a record is considered "consumed."</b>
  * <p>
- * The above example uses {@link #commitSync() commitSync} to mark all received records as committed. In some cases
+ * The above example uses {@link #commitSync() commitSync} to mark all received re， ords as committed. In some cases
  * you may wish to have even finer control over which records have been committed by specifying an offset explicitly.
  * In the example below we commit offset after we finish handling the records in each partition.
  * <p>

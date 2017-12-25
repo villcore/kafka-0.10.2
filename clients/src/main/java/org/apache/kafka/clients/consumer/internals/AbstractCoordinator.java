@@ -209,13 +209,15 @@ public abstract class AbstractCoordinator implements Closeable {
             if (future.failed()) {
                 if (future.isRetriable()) {
                     remainingMs = timeoutMs - (time.milliseconds() - startTimeMs);
-                    if (remainingMs <= 0)
+                    if (remainingMs <= 0) {
                         break;
+                    }
 
                     log.debug("Coordinator discovery failed for group {}, refreshing metadata", groupId);
                     client.awaitMetadataUpdate(remainingMs);
-                } else
+                } else {
                     throw future.exception();
+                }
             } else if (coordinator != null && client.connectionFailed(coordinator)) {
                 // we found the coordinator, but the connection has failed, so mark
                 // it dead and backoff before retrying discovery
@@ -561,8 +563,7 @@ public abstract class AbstractCoordinator implements Closeable {
         log.debug("Sending GroupCoordinator request for group {} to broker {}", groupId, node);
         GroupCoordinatorRequest.Builder requestBuilder =
                 new GroupCoordinatorRequest.Builder(this.groupId);
-        return client.send(node, requestBuilder)
-                     .compose(new GroupCoordinatorResponseHandler());
+        return client.send(node, requestBuilder).compose(new GroupCoordinatorResponseHandler());
     }
 
     private class GroupCoordinatorResponseHandler extends RequestFutureAdapter<ClientResponse, Void> {
@@ -579,8 +580,7 @@ public abstract class AbstractCoordinator implements Closeable {
             clearFindCoordinatorFuture();
             if (error == Errors.NONE) {
                 synchronized (AbstractCoordinator.this) {
-                    AbstractCoordinator.this.coordinator = new Node(
-                            Integer.MAX_VALUE - groupCoordinatorResponse.node().id(),
+                    AbstractCoordinator.this.coordinator = new Node(Integer.MAX_VALUE - groupCoordinatorResponse.node().id(),
                             groupCoordinatorResponse.node().host(),
                             groupCoordinatorResponse.node().port());
                     log.info("Discovered coordinator {} for group {}.", coordinator, groupId);
@@ -843,6 +843,9 @@ public abstract class AbstractCoordinator implements Closeable {
         }
     }
 
+    /**
+     * 心跳线程
+     */
     private class HeartbeatThread extends KafkaThread {
         private boolean enabled = false;
         private boolean closed = false;
@@ -889,8 +892,9 @@ public abstract class AbstractCoordinator implements Closeable {
                 log.debug("Heartbeat thread for group {} started", groupId);
                 while (true) {
                     synchronized (AbstractCoordinator.this) {
-                        if (closed)
+                        if (closed) {
                             return;
+                        }
 
                         if (!enabled) {
                             AbstractCoordinator.this.wait();
@@ -908,8 +912,9 @@ public abstract class AbstractCoordinator implements Closeable {
                         long now = time.milliseconds();
 
                         if (coordinatorUnknown()) {
-                            if (findCoordinatorFuture == null)
+                            if (findCoordinatorFuture == null) {
                                 lookupCoordinator();
+                            }
                             else
                                 AbstractCoordinator.this.wait(retryBackoffMs);
                         } else if (heartbeat.sessionTimeoutExpired(now)) {

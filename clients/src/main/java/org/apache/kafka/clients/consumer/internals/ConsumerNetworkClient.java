@@ -145,8 +145,9 @@ public class ConsumerNetworkClient implements Closeable {
      * until it has completed).
      */
     public void ensureFreshMetadata() {
-        if (this.metadata.updateRequested() || this.metadata.timeToNextUpdate(time.milliseconds()) == 0)
+        if (this.metadata.updateRequested() || this.metadata.timeToNextUpdate(time.milliseconds()) == 0) {
             awaitMetadataUpdate();
+        }
     }
 
     /**
@@ -222,8 +223,9 @@ public class ConsumerNetworkClient implements Closeable {
             // handler), the client will be woken up.
             if (pollCondition == null || pollCondition.shouldBlock()) {
                 // if there are no requests in flight, do not block longer than the retry backoff
-                if (client.inFlightRequestCount() == 0)
+                if (client.inFlightRequestCount() == 0) {
                     timeout = Math.min(timeout, retryBackoffMs);
+                }
                 client.poll(Math.min(MAX_POLL_TIMEOUT_MS, timeout), now);
                 now = time.milliseconds();
             } else {
@@ -427,15 +429,17 @@ public class ConsumerNetworkClient implements Closeable {
 
     public void enableWakeups() {
         synchronized (this) {
-            if (wakeupDisabledCount <= 0)
+            if (wakeupDisabledCount <= 0) {
                 throw new IllegalStateException("Cannot enable wakeups since they were never disabled");
+            }
 
             wakeupDisabledCount--;
 
             // re-wakeup the client if the flag was set since previous wake-up call
             // could be cleared by poll(0) while wakeups were disabled
-            if (wakeupDisabledCount == 0 && wakeup.get())
+            if (wakeupDisabledCount == 0 && wakeup.get()) {
                 this.client.wakeup();
+            }
         }
     }
 

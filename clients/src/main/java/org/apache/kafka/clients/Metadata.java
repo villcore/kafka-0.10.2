@@ -172,8 +172,9 @@ public final class Metadata {
             requestUpdateForNewTopics();
         }
         this.topics.clear();
-        for (String topic : topics)
+        for (String topic : topics) {
             this.topics.put(topic, TOPIC_EXPIRY_NEEDS_UPDATE);
+        }
     }
 
     /**

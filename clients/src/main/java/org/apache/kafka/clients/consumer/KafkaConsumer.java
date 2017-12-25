@@ -644,14 +644,15 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
                     (new ConsumerConfig(userProvidedConfigs, false)).getConfiguredInstances(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG,
                     ConsumerInterceptor.class);
             this.interceptors = interceptorList.isEmpty() ? null : new ConsumerInterceptors<>(interceptorList);
+
             if (keyDeserializer == null) {
-                this.keyDeserializer = config.getConfiguredInstance(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
-                        Deserializer.class);
+                this.keyDeserializer = config.getConfiguredInstance(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, Deserializer.class);
                 this.keyDeserializer.configure(config.originals(), true);
             } else {
                 config.ignore(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG);
                 this.keyDeserializer = keyDeserializer;
             }
+
             if (valueDeserializer == null) {
                 this.valueDeserializer = config.getConfiguredInstance(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
                         Deserializer.class);
@@ -840,8 +841,9 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
                 this.unsubscribe();
             } else {
                 for (String topic : topics) {
-                    if (topic == null || topic.trim().isEmpty())
+                    if (topic == null || topic.trim().isEmpty()) {
                         throw new IllegalArgumentException("Topic collection to subscribe to cannot contain null or empty topic");
+                    }
                 }
                 log.debug("Subscribed to topic(s): {}", Utils.join(topics, ", "));
                 this.subscriptions.subscribe(new HashSet<>(topics), listener);
@@ -954,8 +956,9 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
                 Set<String> topics = new HashSet<>();
                 for (TopicPartition tp : partitions) {
                     String topic = (tp != null) ? tp.topic() : null;
-                    if (topic == null || topic.trim().isEmpty())
+                    if (topic == null || topic.trim().isEmpty()) {
                         throw new IllegalArgumentException("Topic partitions to assign to cannot have null or empty topic");
+                    }
                     topics.add(topic);
                 }
 
@@ -1004,17 +1007,20 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
     public ConsumerRecords<K, V> poll(long timeout) {
         acquire();
         try {
-            if (timeout < 0)
+            if (timeout < 0) {
                 throw new IllegalArgumentException("Timeout must not be negative");
+            }
 
-            if (this.subscriptions.hasNoSubscriptionOrUserAssignment())
+            if (this.subscriptions.hasNoSubscriptionOrUserAssignment()) {
                 throw new IllegalStateException("Consumer is not subscribed to any topics or assigned any partitions");
+            }
 
             // poll for new data until the timeout expires
             long start = time.milliseconds();
             long remaining = timeout;
             do {
                 Map<TopicPartition, List<ConsumerRecord<K, V>>> records = pollOnce(remaining);
+
                 if (!records.isEmpty()) {
                     // before returning the fetched records, we can send off the next round of fetches
                     // and avoid block waiting for their responses to enable pipelining while the user
@@ -1022,13 +1028,16 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
                     //
                     // NOTE: since the consumed position has already been updated, we must not allow
                     // wakeups or any other errors to be triggered prior to returning the fetched records.
-                    if (fetcher.sendFetches() > 0 || client.pendingRequestCount() > 0)
+                    if (fetcher.sendFetches() > 0 || client.pendingRequestCount() > 0) {
                         client.pollNoWakeup();
+                    }
 
-                    if (this.interceptors == null)
+                    if (this.interceptors == null) {
                         return new ConsumerRecords<>(records);
-                    else
+                    }
+                    else {
                         return this.interceptors.onConsume(new ConsumerRecords<>(records));
+                    }
                 }
 
                 long elapsed = time.milliseconds() - start;
@@ -1052,8 +1061,9 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
 
         // fetch positions if we have partitions we're subscribed to that we
         // don't know the offset for
-        if (!subscriptions.hasAllFetchPositions())
+        if (!subscriptions.hasAllFetchPositions()) {
             updateFetchPositions(this.subscriptions.missingFetchPositions());
+        }
 
         // if data is available already, return it immediately
         Map<TopicPartition, List<ConsumerRecord<K, V>>> records = fetcher.fetchedRecords();
@@ -1077,8 +1087,9 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
 
         // after the long poll, we should check whether the group needs to rebalance
         // prior to returning data so that the group can stabilize faster
-        if (coordinator.needRejoin())
+        if (coordinator.needRejoin()) {
             return Collections.emptyMap();
+        }
 
         return fetcher.fetchedRecords();
     }

@@ -223,8 +223,9 @@ public class Fetcher<K, V> implements SubscriptionState.Listener {
     public void resetOffsetsIfNeeded(Set<TopicPartition> partitions) {
         for (TopicPartition tp : partitions) {
             // TODO: If there are several offsets to reset, we could submit offset requests in parallel
-            if (subscriptions.isAssigned(tp) && subscriptions.isOffsetResetNeeded(tp))
+            if (subscriptions.isAssigned(tp) && subscriptions.isOffsetResetNeeded(tp)) {
                 resetOffset(tp);
+            }
         }
     }
 
@@ -360,18 +361,26 @@ public class Fetcher<K, V> implements SubscriptionState.Listener {
     private void resetOffset(TopicPartition partition) {
         OffsetResetStrategy strategy = subscriptions.resetStrategy(partition);
         log.debug("Resetting offset for partition {} to {} offset.", partition, strategy.name().toLowerCase(Locale.ROOT));
+
         final long timestamp;
-        if (strategy == OffsetResetStrategy.EARLIEST)
+        if (strategy == OffsetResetStrategy.EARLIEST) {
             timestamp = ListOffsetRequest.EARLIEST_TIMESTAMP;
-        else if (strategy == OffsetResetStrategy.LATEST)
+        }
+        else if (strategy == OffsetResetStrategy.LATEST) {
             timestamp = ListOffsetRequest.LATEST_TIMESTAMP;
-        else
+        }
+        else {
             throw new NoOffsetForPartitionException(partition);
+        }
+
         Map<TopicPartition, OffsetData> offsetsByTimes = retrieveOffsetsByTimes(
                 Collections.singletonMap(partition, timestamp), Long.MAX_VALUE, false);
+
         OffsetData offsetData = offsetsByTimes.get(partition);
-        if (offsetData == null)
+        if (offsetData == null) {
             throw new NoOffsetForPartitionException(partition);
+        }
+
         long offset = offsetData.offset;
         // we might lose the assignment while fetching the offset, so check it is still active
         if (subscriptions.isAssigned(partition))
@@ -468,8 +477,9 @@ public class Fetcher<K, V> implements SubscriptionState.Listener {
         while (recordsRemaining > 0) {
             if (nextInLineRecords == null || nextInLineRecords.isDrained()) {
                 CompletedFetch completedFetch = completedFetches.poll();
-                if (completedFetch == null)
+                if (completedFetch == null) {
                     break;
+                }
 
                 nextInLineRecords = parseCompletedFetch(completedFetch);
             } else {

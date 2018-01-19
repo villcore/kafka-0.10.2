@@ -42,7 +42,7 @@ public final class Heartbeat {
 
     public void poll(long now) {
         this.lastPoll = now;
-    }∆
+    }
 
     public void sentHeartbeat(long now) {
         this.lastHeartbeatSend = now;

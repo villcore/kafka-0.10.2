@@ -229,8 +229,8 @@ class GroupMetadataManager(val brokerId: Int,
                           offsetMetadata: immutable.Map[TopicPartition, OffsetAndMetadata],
                           responseCallback: immutable.Map[TopicPartition, Short] => Unit): Option[DelayedStore] = {
     // first filter out partitions with offset metadata size exceeding limit
-    val filteredOffsetMetadata = offsetMetadata.filter { case (_, offsetAndMetadata) =>
-      validateOffsetMetadataLength(offsetAndMetadata.metadata)
+    val filteredOffsetMetadata = offsetMetadata.filter {
+      case (_, offsetAndMetadata) => validateOffsetMetadataLength(offsetAndMetadata.metadata)
     }
 
     // construct the message set to append

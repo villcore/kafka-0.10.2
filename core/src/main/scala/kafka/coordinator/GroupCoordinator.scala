@@ -428,13 +428,14 @@ class GroupCoordinator(val brokerId: Int,
                       generationId: Int,
                       offsetMetadata: immutable.Map[TopicPartition, OffsetAndMetadata],
                       responseCallback: immutable.Map[TopicPartition, Short] => Unit) {
+
     var delayedOffsetStore: Option[DelayedStore] = None
 
     group synchronized {
       if (group.is(Dead)) {
         responseCallback(offsetMetadata.mapValues(_ => Errors.UNKNOWN_MEMBER_ID.code))
       } else if (generationId < 0 && group.is(Empty)) {
-        // the group is only using Kafka to store offsets
+        // the group is only using Kafka to store offsets //__consomer_offset
         delayedOffsetStore = groupManager.prepareStoreOffsets(group, memberId, generationId,
           offsetMetadata, responseCallback)
       } else if (group.is(AwaitingSync)) {

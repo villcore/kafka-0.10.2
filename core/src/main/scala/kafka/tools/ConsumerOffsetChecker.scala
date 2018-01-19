@@ -163,6 +163,7 @@ object ConsumerOffsetChecker extends Logging {
       val offsetFetchResponse = OffsetFetchResponse.readFrom(channel.receive().payload())
       debug("Received offset fetch response %s.".format(offsetFetchResponse))
 
+      //低版本从zk获取offset
       offsetFetchResponse.requestInfo.foreach { case (topicAndPartition, offsetAndMetadata) =>
         if (offsetAndMetadata == OffsetMetadataAndError.NoOffset) {
           val topicDirs = new ZKGroupTopicDirs(group, topicAndPartition.topic)
